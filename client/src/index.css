@@ -4,6 +4,42 @@
 @config "../tailwind.config.js";
 
 @layer base {
+  :root {
+    --color-background: 248 250 252;
+    --color-surface: 255 255 255;
+    --color-surface-hover: 241 245 249;
+    --color-input-bg: 255 255 255;
+    --color-border: 226 232 240;
+    --color-border-focus: 0 212 170;
+    --color-primary: 108 99 255;
+    --color-primary-hover: 90 82 213;
+    --color-primary-glow: rgba(108, 99, 255, 0.15);
+    --color-secondary: 0 212 170;
+    --color-secondary-hover: 0 184 148;
+    --color-danger: 255 71 87;
+    --color-danger-hover: 224 62 78;
+    --color-text: 15 23 42;
+    --color-text-muted: 100 116 139;
+  }
+
+  .dark {
+    --color-background: 11 15 25;
+    --color-surface: 19 26 43;
+    --color-surface-hover: 28 37 56;
+    --color-input-bg: 10 13 20;
+    --color-border: 35 45 66;
+    --color-border-focus: 0 212 170;
+    --color-primary: 108 99 255;
+    --color-primary-hover: 126 119 255;
+    --color-primary-glow: rgba(108, 99, 255, 0.25);
+    --color-secondary: 0 212 170;
+    --color-secondary-hover: 0 232 187;
+    --color-danger: 255 71 87;
+    --color-danger-hover: 255 107 122;
+    --color-text: 226 232 240;
+    --color-text-muted: 148 163 184;
+  }
+
   body {
     @apply bg-background text-text font-sans antialiased selection:bg-primary selection:text-white;
   }
@@ -23,7 +59,7 @@
     @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:opacity-50 disabled:cursor-not-allowed;
   }
   .btn-primary {
-    @apply bg-primary text-white hover:bg-primary-hover shadow-[0_0_15px_rgba(108,99,255,0.2)] hover:shadow-[0_0_20px_rgba(108,99,255,0.4)] active:scale-[0.98];
+    @apply bg-primary text-white hover:bg-primary-hover shadow-[0_0_15px_var(--color-primary-glow)] hover:shadow-[0_0_20px_var(--color-primary-glow)] active:scale-[0.98];
   }
   .btn-secondary {
     @apply bg-surfaceHover text-text border border-border hover:border-text-muted hover:bg-border active:scale-[0.98];
@@ -34,7 +70,7 @@
   
   /* Input Fields */
   .form-input {
-    @apply w-full px-4 py-2.5 bg-[#0A0D14] border border-border rounded-xl text-sm transition-all duration-200 focus:border-primary focus:ring-1 focus:ring-primary outline-none placeholder:text-text-muted;
+    @apply w-full px-4 py-2.5 bg-input border border-border rounded-xl text-sm transition-all duration-200 focus:border-primary focus:ring-1 focus:ring-primary outline-none placeholder:text-text-muted;
   }
   .form-label {
     @apply block text-sm font-medium text-text-muted mb-1.5;
