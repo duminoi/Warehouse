@@ -1,0 +1,14 @@
+{
+  "name": "warehouse-management-root",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Root workspace to manage fullstack application",
+  "scripts": {
+    "install:all": "npm install && npm install --prefix server && npm install --prefix client",
+    "dev": "docker compose up -d && concurrently -c \"blue,green\" -n \"server,client\" \"wait-on tcp:localhost:5434 && npm run dev --prefix server\" \"npm run dev --prefix client -- --open\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "wait-on": "^7.2.0"
+  }
+}
