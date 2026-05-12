@@ -72,9 +72,16 @@ graph TD
 
 | File | Prefix | Endpoints |
 |------|--------|-----------|
-| `receipt.routes.ts` | `/api/receipts` | GET `/`, GET `/:id`, POST `/`, DELETE `/:id`, GET `/stats` |
-| `product.routes.ts` | `/api/products` | GET `/`, POST `/` |
-| `warehouse.routes.ts` | `/api/warehouses` | GET `/`, POST `/` |
+| [receipt.routes.ts](file:///f:/Projects/Test/server/src/routes/receipt.routes.ts) | `/api/receipts` | GET `/`, GET `/:id`, POST `/`, DELETE `/:id`, GET `/stats` |
+| [product.routes.ts](file:///f:/Projects/Test/server/src/routes/product.routes.ts) | `/api/products` | GET `/`, POST `/` |
+| [warehouse.routes.ts](file:///f:/Projects/Test/server/src/routes/warehouse.routes.ts) | `/api/warehouses` | GET `/`, POST `/` |
+
+```typescript
+// Ví dụ: receipt.routes.ts
+const router = Router();
+router.get("/", (req, res) => receiptController.getAll(req, res));
+router.post("/", (req, res) => receiptController.create(req, res));
+```
 
 ---
 
@@ -84,9 +91,9 @@ graph TD
 
 | File | Chức năng chính |
 |------|----------------|
-| `receipt.controller.ts` | CRUD phiếu nhập kho, xử lý lỗi duplicate/FK violation |
-| `product.controller.ts` | CRUD sản phẩm |
-| `warehouse.controller.ts` | CRUD kho |
+| [receipt.controller.ts](file:///f:/Projects/Test/server/src/controllers/receipt.controller.ts) | CRUD phiếu nhập kho, xử lý lỗi duplicate/FK violation |
+| [product.controller.ts](file:///f:/Projects/Test/server/src/controllers/product.controller.ts) | CRUD sản phẩm |
+| [warehouse.controller.ts](file:///f:/Projects/Test/server/src/controllers/warehouse.controller.ts) | CRUD kho |
 
 **Luồng xử lý tạo phiếu:**
 ```mermaid
@@ -120,13 +127,22 @@ sequenceDiagram
     Controller-->>Client: 201 {success: true, data: receipt}
 ```
 
+**Chiến lược xử lý lỗi:**
+```typescript
+// Controller phân loại lỗi cụ thể:
+if (error instanceof ZodError) → 400 (validation)
+if ("duplicate key")          → 409 (conflict)  
+if ("foreign key")            → 400 (bad reference)
+else                          → 500 (server error)
+```
+
 ---
 
 ### 2.3 Validators Layer — Kiểm tra dữ liệu (Zod)
 
 > **Nhiệm vụ:** Schema validation với thông báo lỗi tiếng Việt.
 
-File: `schemas.ts`
+File: [schemas.ts](file:///f:/Projects/Test/server/src/validators/schemas.ts)
 
 | Schema | Quy tắc chính |
 |--------|---------------|
@@ -143,9 +159,9 @@ File: `schemas.ts`
 
 | File | Logic chính |
 |------|------------|
-| `receipt.service.ts` | Validate items ≥ 1, tính tổng, chuyển số → chữ VN, gọi repo |
-| `product.service.ts` | Delegate CRUD |
-| `warehouse.service.ts` | Delegate CRUD |
+| [receipt.service.ts](file:///f:/Projects/Test/server/src/services/receipt.service.ts) | Validate items ≥ 1, tính tổng, chuyển số → chữ VN, gọi repo |
+| [product.service.ts](file:///f:/Projects/Test/server/src/services/product.service.ts) | Delegate CRUD |
+| [warehouse.service.ts](file:///f:/Projects/Test/server/src/services/warehouse.service.ts) | Delegate CRUD |
 
 **Dependency Injection pattern:**
 ```typescript
@@ -155,7 +171,7 @@ export class ReceiptService {
 }
 ```
 
-**Utility:** `number-to-words.ts` — Chuyển số → chữ tiếng Việt (`1500000` → `"Một triệu năm trăm nghìn đồng"`)
+**Utility:** [number-to-words.ts](file:///f:/Projects/Test/server/src/utils/number-to-words.ts) — Chuyển số → chữ tiếng Việt (`1500000` → `"Một triệu năm trăm nghìn đồng"`)
 
 ---
 
@@ -165,9 +181,9 @@ export class ReceiptService {
 
 | File | Queries chính |
 |------|--------------|
-| `receipt.repository.ts` | `findAll` (JOIN warehouses), `findById` (JOIN products), `create` (TRANSACTION), `delete` |
-| `product.repository.ts` | CRUD products |
-| `warehouse.repository.ts` | CRUD warehouses |
+| [receipt.repository.ts](file:///f:/Projects/Test/server/src/repositories/receipt.repository.ts) | `findAll` (JOIN warehouses), `findById` (JOIN products), `create` (TRANSACTION), `delete` |
+| [product.repository.ts](file:///f:/Projects/Test/server/src/repositories/product.repository.ts) | CRUD products |
+| [warehouse.repository.ts](file:///f:/Projects/Test/server/src/repositories/warehouse.repository.ts) | CRUD warehouses |
 
 **Transaction pattern cho tạo phiếu:**
 ```typescript
@@ -189,7 +205,7 @@ try {
 
 ### 2.6 Database Config — Connection Pool
 
-File: `database.ts`
+File: [database.ts](file:///f:/Projects/Test/server/src/config/database.ts)
 
 ```mermaid
 graph LR
@@ -287,6 +303,8 @@ erDiagram
 
 ### Mapping Mẫu 01-VT → Database
 
+![Mẫu phiếu nhập kho 01-VT](file:///f:/Projects/Test/docs/image1.png)
+
 | Vùng trên form | Bảng | Cột |
 |:------|:------|:------|
 | Đơn vị / Bộ phận | `warehouse_receipts` | `company_name`, `department` |
@@ -356,7 +374,7 @@ graph TD
 Client (port 5173) → Vite Proxy (/api → localhost:3000) → Express Server
 ```
 
-File `api.ts` — Generic `fetchApi<T>()` wrapper xử lý:
+File [api.ts](file:///f:/Projects/Test/client/src/services/api.ts) — Generic `fetchApi<T>()` wrapper xử lý:
 - Set `Content-Type: application/json`
 - Parse response envelope `{success, data, error, details}`
 - Throw Error nếu `success: false` (kèm field-level messages)
