@@ -30,19 +30,6 @@ export default function Layout() {
               <ClipboardList className="w-4 h-4" />
               Phiếu nhập kho
             </NavLink>
-            <NavLink
-              to="/create"
-              className={({ isActive }) =>
-                `flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 border ${
-                  isActive
-                    ? "bg-primary/10 text-primary border-primary/20"
-                    : "text-text-muted border-transparent hover:text-text hover:bg-surfaceHover hover:border-border"
-                }`
-              }
-            >
-              <Plus className="w-4 h-4" />
-              Tạo phiếu mới
-            </NavLink>
             <div className="w-px h-6 bg-border mx-2"></div>
             <ThemeToggle />
           </nav>

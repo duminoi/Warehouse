@@ -435,7 +435,7 @@ export default function EditReceiptPage() {
                     <td className="px-4 py-3">
                       <input
                         type="number"
-                        className="w-full px-3 py-2 bg-[#0A0D14] border border-border rounded-lg text-right focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+                        className="w-full px-3 py-2 bg-input border border-border rounded-lg text-right focus:border-primary focus:ring-1 focus:ring-primary outline-none"
                         min="0"
                         value={item.quantity_documented || ""}
                         onChange={(e) => updateItem(item.key, "quantity_documented", parseInt(e.target.value, 10) || 0)}
@@ -445,7 +445,7 @@ export default function EditReceiptPage() {
                     <td className="px-4 py-3">
                       <input
                         type="number"
-                        className="w-full px-3 py-2 bg-[#0A0D14] border border-border rounded-lg text-right focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+                        className="w-full px-3 py-2 bg-input border border-border rounded-lg text-right focus:border-primary focus:ring-1 focus:ring-primary outline-none"
                         min="0"
                         value={item.quantity_actual || ""}
                         onChange={(e) => updateItem(item.key, "quantity_actual", parseInt(e.target.value, 10) || 0)}
@@ -455,7 +455,7 @@ export default function EditReceiptPage() {
                     <td className="px-4 py-3">
                       <input
                         type="number"
-                        className="w-full px-3 py-2 bg-[#0A0D14] border border-border rounded-lg text-right font-mono focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+                        className="w-full px-3 py-2 bg-input border border-border rounded-lg text-right font-mono focus:border-primary focus:ring-1 focus:ring-primary outline-none"
                         min="0"
                         step="1000"
                         value={item.unit_price || ""}

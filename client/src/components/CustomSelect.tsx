@@ -106,7 +106,7 @@ export default function CustomSelect({
             <input
               ref={searchInputRef}
               type="text"
-              className="w-full bg-[#0A0D14] border border-border rounded-lg py-2 pl-9 pr-3 text-sm text-text focus:outline-none focus:border-primary transition-colors"
+              className="w-full bg-input border border-border rounded-lg py-2 pl-9 pr-3 text-sm text-text focus:outline-none focus:border-primary transition-colors"
               placeholder="Tìm kiếm..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
