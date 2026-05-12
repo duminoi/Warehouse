@@ -26,7 +26,9 @@ export default function CustomSelect({
   className = "",
 }: CustomSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
 
@@ -74,7 +76,21 @@ export default function CustomSelect({
     }
   }, [isOpen]);
 
+  // Focus input when opened
+  useEffect(() => {
+    if (isOpen) {
+      setSearchTerm("");
+      setTimeout(() => {
+        searchInputRef.current?.focus();
+      }, 50);
+    }
+  }, [isOpen]);
+
   const selectedOption = options.find((opt) => opt.value === value);
+
+  const filteredOptions = options.filter(opt => 
+    opt.label.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div className={`custom-select-container ${className}`} ref={containerRef}>
@@ -90,6 +106,30 @@ export default function CustomSelect({
 
       {isOpen && createPortal(
         <div className="custom-select-dropdown open-portal" style={dropdownStyle}>
+          <div className="custom-select-search-container" style={{ padding: 'var(--space-sm)', borderBottom: '1px solid var(--color-border)' }}>
+            <input
+              ref={searchInputRef}
+              type="text"
+              className="form-input"
+              placeholder="Tìm kiếm..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                width: '100%',
+                padding: 'var(--space-xs) var(--space-sm)',
+                fontSize: 'var(--font-size-sm)',
+                background: 'var(--color-bg-input)',
+                border: '1px solid var(--color-border)',
+                borderRadius: 'var(--radius-sm)',
+                color: 'var(--color-text)',
+                outline: 'none'
+              }}
+              onFocus={(e) => e.target.style.borderColor = 'var(--color-border-focus)'}
+              onBlur={(e) => e.target.style.borderColor = 'var(--color-border)'}
+            />
+          </div>
+
           {onAddClick && (
             <div
               className="custom-select-add-btn"
@@ -103,27 +143,24 @@ export default function CustomSelect({
           )}
           
           <div className="options-list">
-            <div
-              className={`custom-option ${value === "" ? "selected" : ""}`}
-              onClick={() => {
-                onChange("");
-                setIsOpen(false);
-              }}
-            >
-              {placeholder}
-            </div>
-            {options.map((opt) => (
-              <div
-                key={opt.value}
-                className={`custom-option ${value === opt.value ? "selected" : ""}`}
-                onClick={() => {
-                  onChange(opt.value);
-                  setIsOpen(false);
-                }}
-              >
-                {opt.label}
+            {filteredOptions.length > 0 ? (
+              filteredOptions.map((opt) => (
+                <div
+                  key={opt.value}
+                  className={`custom-option ${value === opt.value ? "selected" : ""}`}
+                  onClick={() => {
+                    onChange(opt.value);
+                    setIsOpen(false);
+                  }}
+                >
+                  {opt.label}
+                </div>
+              ))
+            ) : (
+              <div className="custom-option" style={{ color: "var(--color-text-muted)", cursor: "default" }}>
+                Không tìm thấy kết quả
               </div>
-            ))}
+            )}
           </div>
         </div>,
         document.body
