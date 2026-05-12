@@ -76,6 +76,9 @@ export default function ReceiptDetailPage() {
           <Link to="/" className="btn btn-secondary">
             ← Quay lại
           </Link>
+          <Link to={`/receipts/${receipt.id}/edit`} className="btn btn-primary">
+            ✏️ Sửa
+          </Link>
           <button className="btn btn-danger" onClick={handleDelete}>
             🗑 Xóa phiếu
           </button>

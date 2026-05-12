@@ -50,6 +50,9 @@ export const createReceiptSchema = z.object({
 
 export type CreateReceiptInput = z.infer<typeof createReceiptSchema>;
 
+export const updateReceiptSchema = createReceiptSchema;
+export type UpdateReceiptInput = z.infer<typeof updateReceiptSchema>;
+
 /** Validation schema for creating a product */
 export const createProductSchema = z.object({
   code: z

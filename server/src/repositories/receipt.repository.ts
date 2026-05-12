@@ -5,6 +5,7 @@ import {
   WarehouseReceiptItemWithProduct,
   WarehouseReceiptWithItems,
   CreateReceiptDto,
+  UpdateReceiptDto,
 } from "../models/receipt.model";
 
 export class ReceiptRepository {
@@ -132,7 +133,84 @@ export class ReceiptRepository {
     }
   }
 
-  /** Update total_amount_in_words after creation */
+  /** Update receipt with items in a transaction */
+  async update(id: number, data: UpdateReceiptDto): Promise<WarehouseReceiptWithItems> {
+    const client = await getClient();
+
+    try {
+      await client.query("BEGIN");
+
+      // Calculate total
+      const totalAmount = data.items.reduce(
+        (sum, item) => sum + item.quantity_actual * item.unit_price,
+        0
+      );
+
+      // Update receipt header
+      await client.query(
+        `UPDATE warehouse_receipts 
+         SET receipt_number = $1, company_name = $2, department = $3, receipt_date = $4,
+             debit_account = $5, credit_account = $6, delivered_by = $7, reference_document = $8,
+             warehouse_id = $9, total_amount = $10, attached_documents = $11,
+             created_by = $12, storekeeper = $13, accountant = $14, updated_at = NOW()
+         WHERE id = $15`,
+        [
+          data.receipt_number,
+          data.company_name || null,
+          data.department || null,
+          data.receipt_date,
+          data.debit_account || null,
+          data.credit_account || null,
+          data.delivered_by || null,
+          data.reference_document || null,
+          data.warehouse_id || null,
+          totalAmount,
+          data.attached_documents || null,
+          data.created_by || null,
+          data.storekeeper || null,
+          data.accountant || null,
+          id
+        ]
+      );
+
+      // Delete existing items
+      await client.query("DELETE FROM warehouse_receipt_items WHERE receipt_id = $1", [id]);
+
+      // Insert new items
+      for (let i = 0; i < data.items.length; i++) {
+        const item = data.items[i];
+        const totalPrice = item.quantity_actual * item.unit_price;
+
+        await client.query(
+          `INSERT INTO warehouse_receipt_items 
+            (receipt_id, product_id, line_number, quantity_documented, quantity_actual, unit_price, total_price)
+          VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+          [
+            id,
+            item.product_id,
+            i + 1,
+            item.quantity_documented,
+            item.quantity_actual,
+            item.unit_price,
+            totalPrice,
+          ]
+        );
+      }
+
+      await client.query("COMMIT");
+
+      const updatedReceipt = await this.findById(id);
+      if (!updatedReceipt) throw new Error("Receipt not found after update");
+      return updatedReceipt;
+    } catch (error) {
+      await client.query("ROLLBACK");
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+
+  /** Update total_amount_in_words after creation or update */
   async updateTotalInWords(id: number, totalInWords: string): Promise<void> {
     await query(
       "UPDATE warehouse_receipts SET total_amount_in_words = $2, updated_at = NOW() WHERE id = $1",

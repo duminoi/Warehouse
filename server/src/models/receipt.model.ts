@@ -69,3 +69,5 @@ export interface CreateReceiptItemDto {
   quantity_actual: number;
   unit_price: number;
 }
+
+export type UpdateReceiptDto = CreateReceiptDto;

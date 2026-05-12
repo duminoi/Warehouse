@@ -17,7 +17,7 @@ export class WarehouseController {
 
   async getById(req: Request, res: Response): Promise<void> {
     try {
-      const id = parseInt(req.params.id, 10);
+      const id = parseInt(req.params.id as string, 10);
       if (isNaN(id)) {
         res.status(400).json({ success: false, error: "ID không hợp lệ" });
         return;
@@ -59,7 +59,7 @@ export class WarehouseController {
 
   async delete(req: Request, res: Response): Promise<void> {
     try {
-      const id = parseInt(req.params.id, 10);
+      const id = parseInt(req.params.id as string, 10);
       if (isNaN(id)) {
         res.status(400).json({ success: false, error: "ID không hợp lệ" });
         return;

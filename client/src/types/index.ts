@@ -81,6 +81,8 @@ export interface CreateReceiptDto {
   items: CreateReceiptItemDto[];
 }
 
+export type UpdateReceiptDto = CreateReceiptDto;
+
 export interface CreateWarehouseDto {
   name: string;
   location?: string;

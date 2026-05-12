@@ -85,6 +85,13 @@ export async function createReceipt(data: CreateReceiptDto): Promise<WarehouseRe
   });
 }
 
+export async function updateReceipt(id: number, data: CreateReceiptDto): Promise<WarehouseReceiptWithItems> {
+  return fetchApi<WarehouseReceiptWithItems>(`/receipts/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
+}
+
 export async function deleteReceipt(id: number): Promise<void> {
   return fetchApi<void>(`/receipts/${id}`, { method: "DELETE" });
 }

@@ -116,6 +116,12 @@ export default function ReceiptListPage() {
                         >
                           👁 Xem
                         </Link>
+                        <Link
+                          to={`/receipts/${receipt.id}/edit`}
+                          className="btn btn-primary btn-sm"
+                        >
+                          ✏️ Sửa
+                        </Link>
                         <button
                           className="btn btn-danger btn-sm"
                           onClick={() => handleDelete(receipt.id, receipt.receipt_number)}
