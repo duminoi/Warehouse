@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { Plus, Package, Eye, Pencil, Trash2, CheckCircle2, AlertCircle } from "lucide-react";
 import { getReceipts, deleteReceipt } from "../services/api";
 import type { WarehouseReceipt } from "../types";
 import { formatCurrency, formatDate } from "../utils/format";
@@ -45,88 +46,99 @@ export default function ReceiptListPage() {
   };
 
   return (
-    <div>
-      <div className="page-header">
+    <div className="flex flex-col gap-6 animate-slide-in">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2>📋 Danh sách Phiếu Nhập Kho</h2>
-          <p className="subtitle">
-            Tổng cộng {receipts.length} phiếu nhập kho
-          </p>
+          <h2 className="text-2xl font-bold text-text">Danh sách Phiếu Nhập Kho</h2>
+          <p className="text-text-muted mt-1">Tổng cộng {receipts.length} phiếu nhập kho</p>
         </div>
-        <Link to="/create" className="btn btn-primary btn-lg">
-          ➕ Tạo phiếu mới
+        <Link to="/create" className="btn btn-primary">
+          <Plus className="w-5 h-5" />
+          Tạo phiếu mới
         </Link>
       </div>
 
-      {successMsg && <div className="alert alert-success">✅ {successMsg}</div>}
-      {error && <div className="alert alert-error">❌ {error}</div>}
+      {successMsg && (
+        <div className="flex items-center gap-2 p-4 rounded-xl bg-secondary/10 border border-secondary/20 text-secondary">
+          <CheckCircle2 className="w-5 h-5" />
+          {successMsg}
+        </div>
+      )}
+      {error && (
+        <div className="flex items-center gap-2 p-4 rounded-xl bg-danger/10 border border-danger/20 text-danger">
+          <AlertCircle className="w-5 h-5" />
+          {error}
+        </div>
+      )}
 
       {loading ? (
-        <div className="loading-spinner">
-          <div className="spinner" />
+        <div className="flex items-center justify-center p-12">
+          <div className="w-10 h-10 border-4 border-border border-t-primary rounded-full animate-spin-slow" />
         </div>
       ) : receipts.length === 0 ? (
-        <div className="card">
-          <div className="empty-state">
-            <div className="icon">📦</div>
-            <h3>Chưa có phiếu nhập kho nào</h3>
-            <p>Bấm "Tạo phiếu mới" để bắt đầu nhập hàng</p>
-            <Link to="/create" className="btn btn-primary mt-lg">
-              ➕ Tạo phiếu đầu tiên
-            </Link>
-          </div>
+        <div className="bento-card p-12 flex flex-col items-center justify-center text-center">
+          <Package className="w-16 h-16 text-text-muted mb-4 opacity-50" />
+          <h3 className="text-lg font-semibold text-text mb-2">Chưa có phiếu nhập kho nào</h3>
+          <p className="text-text-muted mb-6">Bấm "Tạo phiếu mới" để bắt đầu nhập hàng</p>
+          <Link to="/create" className="btn btn-primary">
+            <Plus className="w-5 h-5" />
+            Tạo phiếu đầu tiên
+          </Link>
         </div>
       ) : (
-        <div className="card">
-          <div className="table-container">
-            <table className="data-table">
-              <thead>
+        <div className="bento-card">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm text-left">
+              <thead className="text-xs text-text-muted uppercase bg-surfaceHover border-b border-border">
                 <tr>
-                  <th>Số phiếu</th>
-                  <th>Ngày nhập</th>
-                  <th>Đơn vị</th>
-                  <th>Kho nhập</th>
-                  <th>Người giao</th>
-                  <th className="text-right">Tổng tiền</th>
-                  <th className="text-center">Thao tác</th>
+                  <th className="px-6 py-4 font-semibold">Số phiếu</th>
+                  <th className="px-6 py-4 font-semibold">Ngày nhập</th>
+                  <th className="px-6 py-4 font-semibold">Đơn vị</th>
+                  <th className="px-6 py-4 font-semibold">Kho nhập</th>
+                  <th className="px-6 py-4 font-semibold">Người giao</th>
+                  <th className="px-6 py-4 font-semibold text-right">Tổng tiền</th>
+                  <th className="px-6 py-4 font-semibold text-center">Thao tác</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-border">
                 {receipts.map((receipt) => (
-                  <tr key={receipt.id}>
-                    <td>
+                  <tr key={receipt.id} className="hover:bg-surfaceHover/50 transition-colors">
+                    <td className="px-6 py-4">
                       <Link to={`/receipts/${receipt.id}`}>
                         <span className="badge badge-primary">
                           {receipt.receipt_number}
                         </span>
                       </Link>
                     </td>
-                    <td>{formatDate(receipt.receipt_date)}</td>
-                    <td>{receipt.company_name || "—"}</td>
-                    <td>{receipt.warehouse_name || "—"}</td>
-                    <td>{receipt.delivered_by || "—"}</td>
-                    <td className="text-right" style={{ fontWeight: 600, color: "var(--color-secondary)" }}>
+                    <td className="px-6 py-4 text-text-muted">{formatDate(receipt.receipt_date)}</td>
+                    <td className="px-6 py-4">{receipt.company_name || "—"}</td>
+                    <td className="px-6 py-4">{receipt.warehouse_name || "—"}</td>
+                    <td className="px-6 py-4">{receipt.delivered_by || "—"}</td>
+                    <td className="px-6 py-4 text-right font-mono font-semibold text-secondary">
                       {formatCurrency(Number(receipt.total_amount))}
                     </td>
-                    <td className="text-center">
-                      <div className="flex items-center justify-end gap-sm">
+                    <td className="px-6 py-4 text-center">
+                      <div className="flex items-center justify-center gap-2">
                         <Link
                           to={`/receipts/${receipt.id}`}
-                          className="btn btn-secondary btn-sm"
+                          className="p-2 text-text-muted hover:text-primary bg-surface border border-border hover:border-primary/50 rounded-lg transition-all"
+                          title="Xem"
                         >
-                          👁 Xem
+                          <Eye className="w-4 h-4" />
                         </Link>
                         <Link
                           to={`/receipts/${receipt.id}/edit`}
-                          className="btn btn-primary btn-sm"
+                          className="p-2 text-text-muted hover:text-white hover:bg-primary border border-border hover:border-primary rounded-lg transition-all"
+                          title="Sửa"
                         >
-                          ✏️ Sửa
+                          <Pencil className="w-4 h-4" />
                         </Link>
                         <button
-                          className="btn btn-danger btn-sm"
+                          className="p-2 text-text-muted hover:text-white hover:bg-danger border border-border hover:border-danger rounded-lg transition-all"
                           onClick={() => handleDelete(receipt.id, receipt.receipt_number)}
+                          title="Xóa"
                         >
-                          🗑 Xóa
+                          <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
                     </td>

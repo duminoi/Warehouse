@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { FileText, Truck, Box, Paperclip, Save, X, Plus, AlertCircle } from "lucide-react";
 import { getWarehouses, getProducts, getReceipt, updateReceipt, createWarehouse, createProduct } from "../services/api";
 import type { Warehouse, Product, CreateReceiptItemDto } from "../types";
 import { formatCurrency, formatNumber } from "../utils/format";
@@ -7,7 +8,7 @@ import CustomSelect, { type CustomSelectOption } from "../components/CustomSelec
 import Modal from "../components/Modal";
 
 interface ItemRow extends CreateReceiptItemDto {
-  key: string; // unique key for React rendering
+  key: string;
 }
 
 function generateKey(): string {
@@ -19,12 +20,10 @@ export default function EditReceiptPage() {
   const { id } = useParams<{ id: string }>();
   const receiptId = id ? parseInt(id, 10) : 0;
 
-  // Reference data
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [loadingRef, setLoadingRef] = useState(true);
 
-  // Form state
   const [receiptNumber, setReceiptNumber] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [department, setDepartment] = useState("");
@@ -39,16 +38,13 @@ export default function EditReceiptPage() {
   const [storekeeper, setStorekeeper] = useState("");
   const [accountant, setAccountant] = useState("");
 
-  // Items
   const [items, setItems] = useState<ItemRow[]>([
     { key: generateKey(), product_id: 0, quantity_documented: 0, quantity_actual: 0, unit_price: 0 },
   ]);
 
-  // Submission state
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Modal states
   const [isWarehouseModalOpen, setIsWarehouseModalOpen] = useState(false);
   const [newWarehouse, setNewWarehouse] = useState({ name: "", location: "" });
   const [savingWarehouse, setSavingWarehouse] = useState(false);
@@ -57,7 +53,6 @@ export default function EditReceiptPage() {
   const [newProduct, setNewProduct] = useState({ code: "", name: "", unit: "", specification: "" });
   const [savingProduct, setSavingProduct] = useState(false);
 
-  // Load reference data and receipt data
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -74,11 +69,9 @@ export default function EditReceiptPage() {
         setWarehouses(wh);
         setProducts(prod);
 
-        // Populate form
         setReceiptNumber(receipt.receipt_number);
         setCompanyName(receipt.company_name || "");
         setDepartment(receipt.department || "");
-        // Format date to YYYY-MM-DD
         setReceiptDate(new Date(receipt.receipt_date).toISOString().split("T")[0]);
         setDebitAccount(receipt.debit_account || "");
         setCreditAccount(receipt.credit_account || "");
@@ -90,14 +83,13 @@ export default function EditReceiptPage() {
         setStorekeeper(receipt.storekeeper || "");
         setAccountant(receipt.accountant || "");
 
-        // Populate items
         if (receipt.items && receipt.items.length > 0) {
           setItems(receipt.items.map(item => ({
             key: generateKey(),
             product_id: item.product_id,
             quantity_documented: item.quantity_documented,
             quantity_actual: item.quantity_actual,
-            unit_price: Number(item.unit_price) // Ensure it's a number
+            unit_price: Number(item.unit_price)
           })));
         }
 
@@ -111,7 +103,6 @@ export default function EditReceiptPage() {
     loadData();
   }, [receiptId]);
 
-  // Item handlers
   const addItem = () => {
     setItems((prev) => [
       ...prev,
@@ -132,11 +123,7 @@ export default function EditReceiptPage() {
     );
   }, []);
 
-  // Calculations
-  const getItemTotal = (item: ItemRow): number => {
-    return item.quantity_actual * item.unit_price;
-  };
-
+  const getItemTotal = (item: ItemRow): number => item.quantity_actual * item.unit_price;
   const grandTotal = items.reduce((sum, item) => sum + getItemTotal(item), 0);
 
   const getProductUnit = (productId: number): string => {
@@ -144,7 +131,6 @@ export default function EditReceiptPage() {
     return product?.unit || "—";
   };
 
-  // Submit main form
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -198,7 +184,6 @@ export default function EditReceiptPage() {
     }
   };
 
-  // Handlers for Modals
   const handleCreateWarehouse = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -230,7 +215,6 @@ export default function EditReceiptPage() {
       });
       setProducts([...products, created]);
       
-      // Auto-select the newly created product in the last empty row, or add a new row
       setItems((prev) => {
         const newItems = [...prev];
         const emptyRowIndex = newItems.findIndex((item) => item.product_id === 0);
@@ -257,7 +241,6 @@ export default function EditReceiptPage() {
     }
   };
 
-  // Convert references to CustomSelectOptions
   const warehouseOptions: CustomSelectOption[] = warehouses.map((wh) => ({
     value: wh.id,
     label: `${wh.name} ${wh.location ? `(${wh.location})` : ""}`,
@@ -270,37 +253,41 @@ export default function EditReceiptPage() {
 
   if (loadingRef) {
     return (
-      <div className="loading-spinner">
-        <div className="spinner" />
+      <div className="flex items-center justify-center p-12">
+        <div className="w-10 h-10 border-4 border-border border-t-primary rounded-full animate-spin-slow" />
       </div>
     );
   }
 
   return (
-    <div>
-      <div className="page-header">
-        <div>
-          <h2>✏️ Sửa Phiếu Nhập Kho</h2>
-          <p className="subtitle">Mẫu số 01 - VT (Theo TT 200/2014/TT-BTC)</p>
-        </div>
+    <div className="animate-slide-in">
+      <div className="flex flex-col gap-2 mb-8">
+        <h2 className="text-2xl font-bold text-text flex items-center gap-2">
+          <FileText className="text-primary w-6 h-6" />
+          Sửa Phiếu Nhập Kho
+        </h2>
+        <p className="text-text-muted">Mẫu số 01 - VT (Theo TT 200/2014/TT-BTC)</p>
       </div>
 
-      {error && <div className="alert alert-error">❌ {error}</div>}
+      {error && (
+        <div className="flex items-center gap-2 p-4 mb-6 rounded-xl bg-danger/10 border border-danger/20 text-danger">
+          <AlertCircle className="w-5 h-5" />
+          {error}
+        </div>
+      )}
 
-      <form onSubmit={handleSubmit}>
-        {/* Header Info */}
-        <div className="card mb-lg">
-          <div className="card-header">
-            <h3>📝 Thông tin chung</h3>
-          </div>
-          <div className="card-body">
-            <div className="form-grid">
-              <div className="form-group">
-                <label className="form-label">
-                  Số phiếu <span className="required">*</span>
-                </label>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Thông tin chung */}
+          <div className="bento-card p-6 flex flex-col gap-6">
+            <h3 className="text-lg font-semibold flex items-center gap-2 border-b border-border pb-4">
+              <FileText className="w-5 h-5 text-primary" />
+              Thông tin chung
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="form-label">Số phiếu <span className="text-danger">*</span></label>
                 <input
-                  id="receipt-number"
                   type="text"
                   className="form-input"
                   placeholder="VD: NK-2024-001"
@@ -309,13 +296,9 @@ export default function EditReceiptPage() {
                   required
                 />
               </div>
-
-              <div className="form-group">
-                <label className="form-label">
-                  Ngày nhập kho <span className="required">*</span>
-                </label>
+              <div>
+                <label className="form-label">Ngày nhập kho <span className="text-danger">*</span></label>
                 <input
-                  id="receipt-date"
                   type="date"
                   className="form-input"
                   value={receiptDate}
@@ -323,11 +306,9 @@ export default function EditReceiptPage() {
                   required
                 />
               </div>
-
-              <div className="form-group">
+              <div>
                 <label className="form-label">Đơn vị</label>
                 <input
-                  id="company-name"
                   type="text"
                   className="form-input"
                   placeholder="Tên công ty / đơn vị"
@@ -335,11 +316,9 @@ export default function EditReceiptPage() {
                   onChange={(e) => setCompanyName(e.target.value)}
                 />
               </div>
-
-              <div className="form-group">
+              <div>
                 <label className="form-label">Bộ phận</label>
                 <input
-                  id="department"
                   type="text"
                   className="form-input"
                   placeholder="Bộ phận liên quan"
@@ -347,11 +326,9 @@ export default function EditReceiptPage() {
                   onChange={(e) => setDepartment(e.target.value)}
                 />
               </div>
-
-              <div className="form-group">
+              <div>
                 <label className="form-label">Nợ (Tài khoản)</label>
                 <input
-                  id="debit-account"
                   type="text"
                   className="form-input"
                   placeholder="VD: 152, 153, 156..."
@@ -359,11 +336,9 @@ export default function EditReceiptPage() {
                   onChange={(e) => setDebitAccount(e.target.value)}
                 />
               </div>
-
-              <div className="form-group">
+              <div>
                 <label className="form-label">Có (Tài khoản)</label>
                 <input
-                  id="credit-account"
                   type="text"
                   className="form-input"
                   placeholder="VD: 331, 111..."
@@ -373,28 +348,25 @@ export default function EditReceiptPage() {
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Receipt Details */}
-        <div className="card mb-lg">
-          <div className="card-header">
-            <h3>🚚 Thông tin giao nhận</h3>
-          </div>
-          <div className="card-body">
-            <div className="form-grid">
-              <div className="form-group">
-                <label className="form-label">Họ và tên người giao</label>
+          {/* Thông tin giao nhận */}
+          <div className="bento-card p-6 flex flex-col gap-6">
+            <h3 className="text-lg font-semibold flex items-center gap-2 border-b border-border pb-4">
+              <Truck className="w-5 h-5 text-secondary" />
+              Thông tin giao nhận
+            </h3>
+            <div className="grid grid-cols-1 gap-4">
+              <div>
+                <label className="form-label">Người giao hàng</label>
                 <input
-                  id="delivered-by"
                   type="text"
                   className="form-input"
-                  placeholder="Tên người giao hàng"
+                  placeholder="Họ và tên người giao"
                   value={deliveredBy}
                   onChange={(e) => setDeliveredBy(e.target.value)}
                 />
               </div>
-
-              <div className="form-group" style={{ position: "relative" }}>
+              <div className="z-20">
                 <label className="form-label">Nhập tại kho</label>
                 <CustomSelect
                   value={warehouseId}
@@ -402,17 +374,15 @@ export default function EditReceiptPage() {
                   options={warehouseOptions}
                   placeholder="-- Chọn kho --"
                   onAddClick={() => setIsWarehouseModalOpen(true)}
-                  addLabel="➕ Thêm kho mới"
+                  addLabel="Thêm kho mới"
                 />
               </div>
-
-              <div className="form-group full-width">
-                <label className="form-label">Theo chứng từ (số, ngày, tháng, năm, của...)</label>
+              <div>
+                <label className="form-label">Theo chứng từ</label>
                 <input
-                  id="reference-document"
                   type="text"
                   className="form-input"
-                  placeholder="VD: Hóa đơn số 0001234 ngày 01/01/2024 của Công ty ABC"
+                  placeholder="Hóa đơn số... ngày..."
                   value={referenceDocument}
                   onChange={(e) => setReferenceDocument(e.target.value)}
                 />
@@ -421,71 +391,71 @@ export default function EditReceiptPage() {
           </div>
         </div>
 
-        {/* Items Table */}
-        <div className="card mb-lg">
-          <div className="card-header">
-            <h3>📦 Chi tiết hàng hóa</h3>
-            <button type="button" className="btn btn-primary btn-sm" onClick={addItem}>
-              ➕ Thêm dòng
+        {/* Chi tiết hàng hóa */}
+        <div className="bento-card p-0 flex flex-col z-10">
+          <div className="flex justify-between items-center p-6 border-b border-border">
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <Box className="w-5 h-5 text-primary" />
+              Chi tiết hàng hóa
+            </h3>
+            <button type="button" className="btn btn-primary text-xs py-1.5 px-3" onClick={addItem}>
+              <Plus className="w-4 h-4" />
+              Thêm dòng
             </button>
           </div>
-          <div style={{ overflowX: "auto", minHeight: "250px" }}>
-            <table className="items-table">
-              <thead>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm text-left">
+              <thead className="text-xs text-text-muted uppercase bg-surfaceHover border-b border-border">
                 <tr>
-                  <th style={{ width: "40px" }}>STT</th>
-                  <th style={{ minWidth: "250px" }}>Tên sản phẩm / Vật tư</th>
-                  <th style={{ width: "70px" }}>ĐVT</th>
-                  <th style={{ width: "110px" }}>SL Chứng từ</th>
-                  <th style={{ width: "110px" }}>SL Thực nhập</th>
-                  <th style={{ width: "130px" }}>Đơn giá (₫)</th>
-                  <th style={{ width: "140px" }}>Thành tiền</th>
-                  <th style={{ width: "40px" }}></th>
+                  <th className="px-4 py-3 text-center w-12">STT</th>
+                  <th className="px-4 py-3 min-w-[250px]">Sản phẩm / Vật tư</th>
+                  <th className="px-4 py-3 text-center w-20">ĐVT</th>
+                  <th className="px-4 py-3 w-32">SL Chứng từ</th>
+                  <th className="px-4 py-3 w-32">SL Thực nhập</th>
+                  <th className="px-4 py-3 w-40">Đơn giá (₫)</th>
+                  <th className="px-4 py-3 w-40 text-right">Thành tiền</th>
+                  <th className="px-4 py-3 w-12"></th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-border">
                 {items.map((item, index) => (
-                  <tr key={item.key}>
-                    <td className="text-center" style={{ color: "var(--color-text-muted)" }}>
-                      {index + 1}
-                    </td>
-                    <td>
+                  <tr key={item.key} className="bg-surface hover:bg-surfaceHover/30 transition-colors">
+                    <td className="px-4 py-3 text-center text-text-muted">{index + 1}</td>
+                    <td className="px-4 py-3">
                       <CustomSelect
                         value={item.product_id || ""}
                         onChange={(val) => updateItem(item.key, "product_id", typeof val === 'number' ? val : 0)}
                         options={productOptions}
-                        placeholder="-- Chọn sản phẩm --"
+                        placeholder="Chọn sản phẩm"
                         onAddClick={() => setIsProductModalOpen(true)}
-                        addLabel="➕ Thêm sản phẩm mới"
+                        addLabel="Thêm sản phẩm"
                       />
                     </td>
-                    <td className="text-center" style={{ color: "var(--color-text-secondary)", fontSize: "var(--font-size-sm)" }}>
-                      {getProductUnit(item.product_id)}
-                    </td>
-                    <td>
+                    <td className="px-4 py-3 text-center text-text-muted">{getProductUnit(item.product_id)}</td>
+                    <td className="px-4 py-3">
                       <input
                         type="number"
-                        className="item-input"
+                        className="w-full px-3 py-2 bg-[#0A0D14] border border-border rounded-lg text-right focus:border-primary focus:ring-1 focus:ring-primary outline-none"
                         min="0"
                         value={item.quantity_documented || ""}
                         onChange={(e) => updateItem(item.key, "quantity_documented", parseInt(e.target.value, 10) || 0)}
                         placeholder="0"
                       />
                     </td>
-                    <td>
+                    <td className="px-4 py-3">
                       <input
                         type="number"
-                        className="item-input"
+                        className="w-full px-3 py-2 bg-[#0A0D14] border border-border rounded-lg text-right focus:border-primary focus:ring-1 focus:ring-primary outline-none"
                         min="0"
                         value={item.quantity_actual || ""}
                         onChange={(e) => updateItem(item.key, "quantity_actual", parseInt(e.target.value, 10) || 0)}
                         placeholder="0"
                       />
                     </td>
-                    <td>
+                    <td className="px-4 py-3">
                       <input
                         type="number"
-                        className="item-input"
+                        className="w-full px-3 py-2 bg-[#0A0D14] border border-border rounded-lg text-right font-mono focus:border-primary focus:ring-1 focus:ring-primary outline-none"
                         min="0"
                         step="1000"
                         value={item.unit_price || ""}
@@ -493,30 +463,27 @@ export default function EditReceiptPage() {
                         placeholder="0"
                       />
                     </td>
-                    <td className="total-cell">
+                    <td className="px-4 py-3 text-right font-mono font-semibold text-secondary">
                       {getItemTotal(item) > 0 ? formatCurrency(getItemTotal(item)) : "—"}
                     </td>
-                    <td>
+                    <td className="px-4 py-3 text-center">
                       {items.length > 1 && (
                         <button
                           type="button"
-                          className="remove-btn"
+                          className="p-2 text-text-muted hover:text-white hover:bg-danger rounded-lg transition-colors"
                           onClick={() => removeItem(item.key)}
-                          title="Xóa dòng"
                         >
-                          ✕
+                          <X className="w-4 h-4" />
                         </button>
                       )}
                     </td>
                   </tr>
                 ))}
               </tbody>
-              <tfoot>
+              <tfoot className="bg-surfaceHover border-t border-border">
                 <tr>
-                  <td colSpan={6} className="text-right" style={{ fontSize: "var(--font-size-md)" }}>
-                    CỘNG
-                  </td>
-                  <td className="text-right" style={{ color: "var(--color-secondary)", fontSize: "var(--font-size-md)" }}>
+                  <td colSpan={6} className="px-6 py-4 text-right font-bold text-text">CỘNG</td>
+                  <td className="px-4 py-4 text-right font-mono font-bold text-secondary text-lg">
                     {grandTotal > 0 ? formatCurrency(grandTotal) : "—"}
                   </td>
                   <td></td>
@@ -526,120 +493,78 @@ export default function EditReceiptPage() {
           </div>
         </div>
 
-        {/* Grand Total Display */}
         {grandTotal > 0 && (
-          <div className="total-highlight mb-lg">
-            <div className="amount">{formatCurrency(grandTotal)}</div>
-            <div className="amount-words">Tổng tiền: {formatNumber(grandTotal)} VNĐ</div>
+          <div className="bg-gradient-to-r from-primary/10 to-secondary/10 border border-primary/20 rounded-2xl p-6 text-center shadow-[0_0_30px_rgba(108,99,255,0.1)]">
+            <div className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mb-2">
+              {formatCurrency(grandTotal)}
+            </div>
+            <div className="text-sm text-text-muted italic">
+              Tổng tiền: {formatNumber(grandTotal)} VNĐ
+            </div>
           </div>
         )}
 
-        {/* Additional Info */}
-        <div className="card mb-lg">
-          <div className="card-header">
-            <h3>📎 Thông tin bổ sung</h3>
-          </div>
-          <div className="card-body">
-            <div className="form-grid">
-              <div className="form-group full-width">
-                <label className="form-label">Số chứng từ gốc kèm theo</label>
-                <input
-                  id="attached-documents"
-                  type="text"
-                  className="form-input"
-                  placeholder="VD: 02 hóa đơn, 01 hợp đồng"
-                  value={attachedDocuments}
-                  onChange={(e) => setAttachedDocuments(e.target.value)}
-                />
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Người lập phiếu</label>
-                <input
-                  id="created-by"
-                  type="text"
-                  className="form-input"
-                  placeholder="Họ tên người lập"
-                  value={createdBy}
-                  onChange={(e) => setCreatedBy(e.target.value)}
-                />
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Thủ kho</label>
-                <input
-                  id="storekeeper"
-                  type="text"
-                  className="form-input"
-                  placeholder="Họ tên thủ kho"
-                  value={storekeeper}
-                  onChange={(e) => setStorekeeper(e.target.value)}
-                />
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Kế toán trưởng</label>
-                <input
-                  id="accountant"
-                  type="text"
-                  className="form-input"
-                  placeholder="Họ tên kế toán"
-                  value={accountant}
-                  onChange={(e) => setAccountant(e.target.value)}
-                />
-              </div>
+        {/* Thông tin bổ sung */}
+        <div className="bento-card p-6 flex flex-col gap-6">
+          <h3 className="text-lg font-semibold flex items-center gap-2 border-b border-border pb-4">
+            <Paperclip className="w-5 h-5 text-text-muted" />
+            Thông tin bổ sung & Chữ ký
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="lg:col-span-4">
+              <label className="form-label">Chứng từ kèm theo</label>
+              <input
+                type="text"
+                className="form-input"
+                placeholder="VD: 02 hóa đơn, 01 hợp đồng..."
+                value={attachedDocuments}
+                onChange={(e) => setAttachedDocuments(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="form-label">Người lập phiếu</label>
+              <input type="text" className="form-input" value={createdBy} onChange={(e) => setCreatedBy(e.target.value)} />
+            </div>
+            <div>
+              <label className="form-label">Người giao hàng</label>
+              <input type="text" className="form-input" value={deliveredBy} onChange={(e) => setDeliveredBy(e.target.value)} />
+            </div>
+            <div>
+              <label className="form-label">Thủ kho</label>
+              <input type="text" className="form-input" value={storekeeper} onChange={(e) => setStorekeeper(e.target.value)} />
+            </div>
+            <div>
+              <label className="form-label">Kế toán trưởng</label>
+              <input type="text" className="form-input" value={accountant} onChange={(e) => setAccountant(e.target.value)} />
             </div>
           </div>
         </div>
 
         {/* Actions */}
-        <div className="flex justify-end gap-sm">
-          <button
-            type="button"
-            className="btn btn-secondary btn-lg"
-            onClick={() => navigate("/")}
-          >
-            ✕ Hủy
+        <div className="flex items-center justify-end gap-4 mt-4 sticky bottom-6 z-50">
+          <button type="button" className="btn btn-secondary px-6 shadow-xl" onClick={() => navigate("/")}>
+            <X className="w-4 h-4" />
+            Hủy
           </button>
-          <button
-            type="submit"
-            className="btn btn-success btn-lg"
-            disabled={submitting}
-          >
-            {submitting ? "⏳ Đang lưu..." : "💾 Lưu phiếu nhập kho"}
+          <button type="submit" className="btn btn-primary px-8 shadow-xl" disabled={submitting}>
+            <Save className={`w-4 h-4 ${submitting ? 'animate-spin' : ''}`} />
+            {submitting ? "Đang lưu..." : "Lưu phiếu nhập"}
           </button>
         </div>
       </form>
 
-      {/* MODALS */}
-      <Modal 
-        isOpen={isWarehouseModalOpen} 
-        onClose={() => setIsWarehouseModalOpen(false)} 
-        title="Thêm Kho Mới"
-      >
-        <form onSubmit={handleCreateWarehouse}>
-          <div className="form-group mb-lg">
-            <label className="form-label">Tên kho <span className="required">*</span></label>
-            <input 
-              type="text" 
-              className="form-input" 
-              placeholder="VD: Kho chính" 
-              value={newWarehouse.name} 
-              onChange={(e) => setNewWarehouse({ ...newWarehouse, name: e.target.value })} 
-              required 
-            />
+      {/* Modals */}
+      <Modal isOpen={isWarehouseModalOpen} onClose={() => setIsWarehouseModalOpen(false)} title="Thêm Kho Mới">
+        <form onSubmit={handleCreateWarehouse} className="flex flex-col gap-4">
+          <div>
+            <label className="form-label">Tên kho <span className="text-danger">*</span></label>
+            <input type="text" className="form-input" value={newWarehouse.name} onChange={(e) => setNewWarehouse({ ...newWarehouse, name: e.target.value })} required />
           </div>
-          <div className="form-group mb-lg">
+          <div>
             <label className="form-label">Địa chỉ</label>
-            <input 
-              type="text" 
-              className="form-input" 
-              placeholder="VD: Tầng 1, Tòa nhà A" 
-              value={newWarehouse.location} 
-              onChange={(e) => setNewWarehouse({ ...newWarehouse, location: e.target.value })} 
-            />
+            <input type="text" className="form-input" value={newWarehouse.location} onChange={(e) => setNewWarehouse({ ...newWarehouse, location: e.target.value })} />
           </div>
-          <div className="flex justify-end gap-sm mt-xl">
+          <div className="flex justify-end gap-3 mt-4">
             <button type="button" className="btn btn-secondary" onClick={() => setIsWarehouseModalOpen(false)}>Hủy</button>
             <button type="submit" className="btn btn-primary" disabled={savingWarehouse}>
               {savingWarehouse ? "Đang lưu..." : "Lưu Kho"}
@@ -648,56 +573,25 @@ export default function EditReceiptPage() {
         </form>
       </Modal>
 
-      <Modal 
-        isOpen={isProductModalOpen} 
-        onClose={() => setIsProductModalOpen(false)} 
-        title="Thêm Sản Phẩm Mới"
-      >
-        <form onSubmit={handleCreateProduct}>
-          <div className="form-group mb-lg">
-            <label className="form-label">Mã sản phẩm <span className="required">*</span></label>
-            <input 
-              type="text" 
-              className="form-input" 
-              placeholder="VD: SP001" 
-              value={newProduct.code} 
-              onChange={(e) => setNewProduct({ ...newProduct, code: e.target.value })} 
-              required 
-            />
+      <Modal isOpen={isProductModalOpen} onClose={() => setIsProductModalOpen(false)} title="Thêm Sản Phẩm">
+        <form onSubmit={handleCreateProduct} className="flex flex-col gap-4">
+          <div>
+            <label className="form-label">Mã sản phẩm <span className="text-danger">*</span></label>
+            <input type="text" className="form-input" value={newProduct.code} onChange={(e) => setNewProduct({ ...newProduct, code: e.target.value })} required />
           </div>
-          <div className="form-group mb-lg">
-            <label className="form-label">Tên sản phẩm <span className="required">*</span></label>
-            <input 
-              type="text" 
-              className="form-input" 
-              placeholder="VD: Màn hình Dell" 
-              value={newProduct.name} 
-              onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })} 
-              required 
-            />
+          <div>
+            <label className="form-label">Tên sản phẩm <span className="text-danger">*</span></label>
+            <input type="text" className="form-input" value={newProduct.name} onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })} required />
           </div>
-          <div className="form-group mb-lg">
-            <label className="form-label">Đơn vị tính <span className="required">*</span></label>
-            <input 
-              type="text" 
-              className="form-input" 
-              placeholder="VD: Cái, Chiếc, Hộp" 
-              value={newProduct.unit} 
-              onChange={(e) => setNewProduct({ ...newProduct, unit: e.target.value })} 
-              required 
-            />
+          <div>
+            <label className="form-label">Đơn vị tính <span className="text-danger">*</span></label>
+            <input type="text" className="form-input" value={newProduct.unit} onChange={(e) => setNewProduct({ ...newProduct, unit: e.target.value })} required />
           </div>
-          <div className="form-group mb-lg">
-            <label className="form-label">Quy cách (Tùy chọn)</label>
-            <input 
-              type="text" 
-              className="form-input" 
-              placeholder="VD: 24 inch, 75Hz" 
-              value={newProduct.specification} 
-              onChange={(e) => setNewProduct({ ...newProduct, specification: e.target.value })} 
-            />
+          <div>
+            <label className="form-label">Quy cách</label>
+            <input type="text" className="form-input" value={newProduct.specification} onChange={(e) => setNewProduct({ ...newProduct, specification: e.target.value })} />
           </div>
-          <div className="flex justify-end gap-sm mt-xl">
+          <div className="flex justify-end gap-3 mt-4">
             <button type="button" className="btn btn-secondary" onClick={() => setIsProductModalOpen(false)}>Hủy</button>
             <button type="submit" className="btn btn-primary" disabled={savingProduct}>
               {savingProduct ? "Đang lưu..." : "Lưu Sản Phẩm"}

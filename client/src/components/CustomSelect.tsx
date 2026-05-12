@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
+import { ChevronDown, Plus, Search } from "lucide-react";
 
 export interface CustomSelectOption {
   value: string | number;
@@ -22,7 +23,7 @@ export default function CustomSelect({
   options,
   placeholder = "-- Chọn --",
   onAddClick,
-  addLabel = "➕ Thêm mới",
+  addLabel = "Thêm mới",
   className = "",
 }: CustomSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -32,10 +33,8 @@ export default function CustomSelect({
 
   const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
 
-  // Close when click outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      // Need to check both container and the portal dropdown
       const isOutsideContainer = containerRef.current && !containerRef.current.contains(event.target as Node);
       const dropdownEl = document.querySelector(".custom-select-dropdown.open-portal");
       const isOutsideDropdown = dropdownEl && !dropdownEl.contains(event.target as Node);
@@ -45,12 +44,9 @@ export default function CustomSelect({
       }
     }
     document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Update position of portal
   useEffect(() => {
     if (isOpen && containerRef.current) {
       const updatePosition = () => {
@@ -60,7 +56,7 @@ export default function CustomSelect({
             top: rect.bottom + window.scrollY + 4,
             left: rect.left + window.scrollX,
             width: rect.width,
-            zIndex: 9999, // Ensure it's on top
+            zIndex: 9999,
           });
         }
       };
@@ -76,7 +72,6 @@ export default function CustomSelect({
     }
   }, [isOpen]);
 
-  // Focus input when opened
   useEffect(() => {
     if (isOpen) {
       setSearchTerm("");
@@ -93,61 +88,52 @@ export default function CustomSelect({
   );
 
   return (
-    <div className={`custom-select-container ${className}`} ref={containerRef}>
+    <div className={`relative w-full ${className}`} ref={containerRef}>
       <div
-        className={`custom-select-trigger ${isOpen ? "open" : ""}`}
+        className={`form-input flex justify-between items-center cursor-pointer min-h-[44px] ${isOpen ? 'border-primary ring-1 ring-primary' : ''}`}
         onClick={() => setIsOpen(!isOpen)}
       >
-        <span className={selectedOption ? "selected-text" : "placeholder-text"}>
+        <span className={selectedOption ? "text-text" : "text-text-muted"}>
           {selectedOption ? selectedOption.label : placeholder}
         </span>
-        <span className="dropdown-icon">▼</span>
+        <ChevronDown className={`w-4 h-4 text-text-muted transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
       </div>
 
       {isOpen && createPortal(
-        <div className="custom-select-dropdown open-portal" style={dropdownStyle}>
-          <div className="custom-select-search-container" style={{ padding: 'var(--space-sm)', borderBottom: '1px solid var(--color-border)' }}>
+        <div className="custom-select-dropdown open-portal absolute bg-surface border border-border rounded-xl shadow-xl flex flex-col overflow-hidden animate-slide-in" style={dropdownStyle}>
+          <div className="p-2 border-b border-border bg-surfaceHover relative flex items-center">
+            <Search className="w-4 h-4 text-text-muted absolute left-4" />
             <input
               ref={searchInputRef}
               type="text"
-              className="form-input"
+              className="w-full bg-[#0A0D14] border border-border rounded-lg py-2 pl-9 pr-3 text-sm text-text focus:outline-none focus:border-primary transition-colors"
               placeholder="Tìm kiếm..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               onClick={(e) => e.stopPropagation()}
-              style={{
-                width: '100%',
-                padding: 'var(--space-xs) var(--space-sm)',
-                fontSize: 'var(--font-size-sm)',
-                background: 'var(--color-bg-input)',
-                border: '1px solid var(--color-border)',
-                borderRadius: 'var(--radius-sm)',
-                color: 'var(--color-text)',
-                outline: 'none'
-              }}
-              onFocus={(e) => e.target.style.borderColor = 'var(--color-border-focus)'}
-              onBlur={(e) => e.target.style.borderColor = 'var(--color-border)'}
             />
           </div>
 
           {onAddClick && (
-            <div
-              className="custom-select-add-btn"
+            <button
+              type="button"
+              className="flex items-center justify-center gap-2 w-full py-2.5 text-sm font-medium text-secondary bg-secondary/5 border-b border-border hover:bg-secondary/10 transition-colors"
               onClick={() => {
                 setIsOpen(false);
                 onAddClick();
               }}
             >
+              <Plus className="w-4 h-4" />
               {addLabel}
-            </div>
+            </button>
           )}
           
-          <div className="options-list">
+          <div className="overflow-y-auto max-h-[250px] p-1 custom-scrollbar">
             {filteredOptions.length > 0 ? (
               filteredOptions.map((opt) => (
                 <div
                   key={opt.value}
-                  className={`custom-option ${value === opt.value ? "selected" : ""}`}
+                  className={`px-3 py-2 text-sm rounded-lg cursor-pointer transition-colors ${value === opt.value ? "bg-primary/10 text-primary font-medium" : "text-text hover:bg-surfaceHover"}`}
                   onClick={() => {
                     onChange(opt.value);
                     setIsOpen(false);
@@ -157,7 +143,7 @@ export default function CustomSelect({
                 </div>
               ))
             ) : (
-              <div className="custom-option" style={{ color: "var(--color-text-muted)", cursor: "default" }}>
+              <div className="px-3 py-3 text-sm text-text-muted text-center cursor-default">
                 Không tìm thấy kết quả
               </div>
             )}
