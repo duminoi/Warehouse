@@ -4,6 +4,8 @@ import type {
   WarehouseReceipt,
   WarehouseReceiptWithItems,
   CreateReceiptDto,
+  CreateWarehouseDto,
+  CreateProductDto,
 } from "../types";
 
 const BASE_URL = "/api";
@@ -44,6 +46,13 @@ export async function getWarehouse(id: number): Promise<Warehouse> {
   return fetchApi<Warehouse>(`/warehouses/${id}`);
 }
 
+export async function createWarehouse(data: CreateWarehouseDto): Promise<Warehouse> {
+  return fetchApi<Warehouse>("/warehouses", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
 // Products
 export async function getProducts(): Promise<Product[]> {
   return fetchApi<Product[]>("/products");
@@ -51,6 +60,13 @@ export async function getProducts(): Promise<Product[]> {
 
 export async function getProduct(id: number): Promise<Product> {
   return fetchApi<Product>(`/products/${id}`);
+}
+
+export async function createProduct(data: CreateProductDto): Promise<Product> {
+  return fetchApi<Product>("/products", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
 }
 
 // Receipts

@@ -81,6 +81,18 @@ export interface CreateReceiptDto {
   items: CreateReceiptItemDto[];
 }
 
+export interface CreateWarehouseDto {
+  name: string;
+  location?: string;
+}
+
+export interface CreateProductDto {
+  code: string;
+  name: string;
+  unit: string;
+  specification?: string;
+}
+
 export interface ApiResponse<T> {
   success: boolean;
   data?: T;

@@ -1,8 +1,10 @@
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { getWarehouses, getProducts, createReceipt } from "../services/api";
+import { getWarehouses, getProducts, createReceipt, createWarehouse, createProduct } from "../services/api";
 import type { Warehouse, Product, CreateReceiptItemDto } from "../types";
 import { formatCurrency, formatNumber } from "../utils/format";
+import CustomSelect, { type CustomSelectOption } from "../components/CustomSelect";
+import Modal from "../components/Modal";
 
 interface ItemRow extends CreateReceiptItemDto {
   key: string; // unique key for React rendering
@@ -29,7 +31,7 @@ export default function CreateReceiptPage() {
   const [creditAccount, setCreditAccount] = useState("");
   const [deliveredBy, setDeliveredBy] = useState("");
   const [referenceDocument, setReferenceDocument] = useState("");
-  const [warehouseId, setWarehouseId] = useState<number | undefined>(undefined);
+  const [warehouseId, setWarehouseId] = useState<number | "">("");
   const [attachedDocuments, setAttachedDocuments] = useState("");
   const [createdBy, setCreatedBy] = useState("");
   const [storekeeper, setStorekeeper] = useState("");
@@ -43,6 +45,15 @@ export default function CreateReceiptPage() {
   // Submission state
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Modal states
+  const [isWarehouseModalOpen, setIsWarehouseModalOpen] = useState(false);
+  const [newWarehouse, setNewWarehouse] = useState({ name: "", location: "" });
+  const [savingWarehouse, setSavingWarehouse] = useState(false);
+
+  const [isProductModalOpen, setIsProductModalOpen] = useState(false);
+  const [newProduct, setNewProduct] = useState({ code: "", name: "", unit: "", specification: "" });
+  const [savingProduct, setSavingProduct] = useState(false);
 
   // Load reference data
   useEffect(() => {
@@ -89,18 +100,16 @@ export default function CreateReceiptPage() {
 
   const grandTotal = items.reduce((sum, item) => sum + getItemTotal(item), 0);
 
-  // Get product info for display
   const getProductUnit = (productId: number): string => {
     const product = products.find((p) => p.id === productId);
     return product?.unit || "—";
   };
 
-  // Submit
+  // Submit main form
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
-    // Validation
     if (!receiptNumber.trim()) {
       setError("Vui lòng nhập số phiếu nhập kho");
       return;
@@ -127,7 +136,7 @@ export default function CreateReceiptPage() {
         credit_account: creditAccount.trim() || undefined,
         delivered_by: deliveredBy.trim() || undefined,
         reference_document: referenceDocument.trim() || undefined,
-        warehouse_id: warehouseId || undefined,
+        warehouse_id: warehouseId !== "" ? (warehouseId as number) : undefined,
         attached_documents: attachedDocuments.trim() || undefined,
         created_by: createdBy.trim() || undefined,
         storekeeper: storekeeper.trim() || undefined,
@@ -149,6 +158,76 @@ export default function CreateReceiptPage() {
       setSubmitting(false);
     }
   };
+
+  // Handlers for Modals
+  const handleCreateWarehouse = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      setSavingWarehouse(true);
+      const created = await createWarehouse({
+        name: newWarehouse.name,
+        location: newWarehouse.location || undefined,
+      });
+      setWarehouses([...warehouses, created]);
+      setWarehouseId(created.id);
+      setIsWarehouseModalOpen(false);
+      setNewWarehouse({ name: "", location: "" });
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Lỗi tạo kho");
+    } finally {
+      setSavingWarehouse(false);
+    }
+  };
+
+  const handleCreateProduct = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      setSavingProduct(true);
+      const created = await createProduct({
+        code: newProduct.code,
+        name: newProduct.name,
+        unit: newProduct.unit,
+        specification: newProduct.specification || undefined,
+      });
+      setProducts([...products, created]);
+      
+      // Auto-select the newly created product in the last empty row, or add a new row
+      setItems((prev) => {
+        const newItems = [...prev];
+        const emptyRowIndex = newItems.findIndex((item) => item.product_id === 0);
+        if (emptyRowIndex >= 0) {
+          newItems[emptyRowIndex].product_id = created.id;
+        } else {
+          newItems.push({
+            key: generateKey(),
+            product_id: created.id,
+            quantity_documented: 0,
+            quantity_actual: 0,
+            unit_price: 0,
+          });
+        }
+        return newItems;
+      });
+
+      setIsProductModalOpen(false);
+      setNewProduct({ code: "", name: "", unit: "", specification: "" });
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Lỗi tạo sản phẩm");
+    } finally {
+      setSavingProduct(false);
+    }
+  };
+
+  // Convert references to CustomSelectOptions
+  const warehouseOptions: CustomSelectOption[] = warehouses.map((wh) => ({
+    value: wh.id,
+    label: `${wh.name} ${wh.location ? `(${wh.location})` : ""}`,
+  }));
+
+  const productOptions: CustomSelectOption[] = products.map((p) => ({
+    value: p.id,
+    label: `[${p.code}] ${p.name}`,
+  }));
 
   if (loadingRef) {
     return (
@@ -276,21 +355,16 @@ export default function CreateReceiptPage() {
                 />
               </div>
 
-              <div className="form-group">
+              <div className="form-group" style={{ position: "relative" }}>
                 <label className="form-label">Nhập tại kho</label>
-                <select
-                  id="warehouse-id"
-                  className="form-select"
-                  value={warehouseId || ""}
-                  onChange={(e) => setWarehouseId(e.target.value ? parseInt(e.target.value, 10) : undefined)}
-                >
-                  <option value="">-- Chọn kho --</option>
-                  {warehouses.map((wh) => (
-                    <option key={wh.id} value={wh.id}>
-                      {wh.name} {wh.location ? `(${wh.location})` : ""}
-                    </option>
-                  ))}
-                </select>
+                <CustomSelect
+                  value={warehouseId}
+                  onChange={(val) => setWarehouseId(val)}
+                  options={warehouseOptions}
+                  placeholder="-- Chọn kho --"
+                  onAddClick={() => setIsWarehouseModalOpen(true)}
+                  addLabel="➕ Thêm kho mới"
+                />
               </div>
 
               <div className="form-group full-width">
@@ -316,12 +390,12 @@ export default function CreateReceiptPage() {
               ➕ Thêm dòng
             </button>
           </div>
-          <div style={{ overflowX: "auto" }}>
+          <div style={{ overflowX: "auto", minHeight: "250px" }}>
             <table className="items-table">
               <thead>
                 <tr>
                   <th style={{ width: "40px" }}>STT</th>
-                  <th style={{ minWidth: "200px" }}>Tên sản phẩm / Vật tư</th>
+                  <th style={{ minWidth: "250px" }}>Tên sản phẩm / Vật tư</th>
                   <th style={{ width: "70px" }}>ĐVT</th>
                   <th style={{ width: "110px" }}>SL Chứng từ</th>
                   <th style={{ width: "110px" }}>SL Thực nhập</th>
@@ -337,18 +411,14 @@ export default function CreateReceiptPage() {
                       {index + 1}
                     </td>
                     <td>
-                      <select
-                        className="item-select"
+                      <CustomSelect
                         value={item.product_id || ""}
-                        onChange={(e) => updateItem(item.key, "product_id", parseInt(e.target.value, 10) || 0)}
-                      >
-                        <option value="">-- Chọn sản phẩm --</option>
-                        {products.map((p) => (
-                          <option key={p.id} value={p.id}>
-                            [{p.code}] {p.name}
-                          </option>
-                        ))}
-                      </select>
+                        onChange={(val) => updateItem(item.key, "product_id", typeof val === 'number' ? val : 0)}
+                        options={productOptions}
+                        placeholder="-- Chọn sản phẩm --"
+                        onAddClick={() => setIsProductModalOpen(true)}
+                        addLabel="➕ Thêm sản phẩm mới"
+                      />
                     </td>
                     <td className="text-center" style={{ color: "var(--color-text-secondary)", fontSize: "var(--font-size-sm)" }}>
                       {getProductUnit(item.product_id)}
@@ -501,6 +571,101 @@ export default function CreateReceiptPage() {
           </button>
         </div>
       </form>
+
+      {/* MODALS */}
+      <Modal 
+        isOpen={isWarehouseModalOpen} 
+        onClose={() => setIsWarehouseModalOpen(false)} 
+        title="Thêm Kho Mới"
+      >
+        <form onSubmit={handleCreateWarehouse}>
+          <div className="form-group mb-lg">
+            <label className="form-label">Tên kho <span className="required">*</span></label>
+            <input 
+              type="text" 
+              className="form-input" 
+              placeholder="VD: Kho chính" 
+              value={newWarehouse.name} 
+              onChange={(e) => setNewWarehouse({ ...newWarehouse, name: e.target.value })} 
+              required 
+            />
+          </div>
+          <div className="form-group mb-lg">
+            <label className="form-label">Địa chỉ</label>
+            <input 
+              type="text" 
+              className="form-input" 
+              placeholder="VD: Tầng 1, Tòa nhà A" 
+              value={newWarehouse.location} 
+              onChange={(e) => setNewWarehouse({ ...newWarehouse, location: e.target.value })} 
+            />
+          </div>
+          <div className="flex justify-end gap-sm mt-xl">
+            <button type="button" className="btn btn-secondary" onClick={() => setIsWarehouseModalOpen(false)}>Hủy</button>
+            <button type="submit" className="btn btn-primary" disabled={savingWarehouse}>
+              {savingWarehouse ? "Đang lưu..." : "Lưu Kho"}
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      <Modal 
+        isOpen={isProductModalOpen} 
+        onClose={() => setIsProductModalOpen(false)} 
+        title="Thêm Sản Phẩm Mới"
+      >
+        <form onSubmit={handleCreateProduct}>
+          <div className="form-group mb-lg">
+            <label className="form-label">Mã sản phẩm <span className="required">*</span></label>
+            <input 
+              type="text" 
+              className="form-input" 
+              placeholder="VD: SP001" 
+              value={newProduct.code} 
+              onChange={(e) => setNewProduct({ ...newProduct, code: e.target.value })} 
+              required 
+            />
+          </div>
+          <div className="form-group mb-lg">
+            <label className="form-label">Tên sản phẩm <span className="required">*</span></label>
+            <input 
+              type="text" 
+              className="form-input" 
+              placeholder="VD: Màn hình Dell" 
+              value={newProduct.name} 
+              onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })} 
+              required 
+            />
+          </div>
+          <div className="form-group mb-lg">
+            <label className="form-label">Đơn vị tính <span className="required">*</span></label>
+            <input 
+              type="text" 
+              className="form-input" 
+              placeholder="VD: Cái, Chiếc, Hộp" 
+              value={newProduct.unit} 
+              onChange={(e) => setNewProduct({ ...newProduct, unit: e.target.value })} 
+              required 
+            />
+          </div>
+          <div className="form-group mb-lg">
+            <label className="form-label">Quy cách (Tùy chọn)</label>
+            <input 
+              type="text" 
+              className="form-input" 
+              placeholder="VD: 24 inch, 75Hz" 
+              value={newProduct.specification} 
+              onChange={(e) => setNewProduct({ ...newProduct, specification: e.target.value })} 
+            />
+          </div>
+          <div className="flex justify-end gap-sm mt-xl">
+            <button type="button" className="btn btn-secondary" onClick={() => setIsProductModalOpen(false)}>Hủy</button>
+            <button type="submit" className="btn btn-primary" disabled={savingProduct}>
+              {savingProduct ? "Đang lưu..." : "Lưu Sản Phẩm"}
+            </button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }
