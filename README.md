@@ -32,29 +32,27 @@
 - Node.js >= 18
 - Docker & Docker Compose (cho PostgreSQL)
 
-### 1. Start Database
+### 1. Install Dependencies
+Cài đặt tất cả thư viện cho root, server và client:
 ```bash
-docker compose up -d
+npm run install:all
 ```
 
-### 2. Setup Backend
+### 2. Setup Database
+Khởi tạo cơ sở dữ liệu và dữ liệu mẫu:
 ```bash
 cd server
-npm install
-npm run migrate   # Tạo bảng
-npm run seed      # Dữ liệu mẫu
-npm run dev       # Start server (port 3000)
+npm run migrate   # Tạo cấu trúc bảng
+npm run seed      # Thêm dữ liệu mẫu
+cd ..
 ```
 
-### 3. Setup Frontend
+### 3. Start Development Server
+Khởi chạy đồng thời Database, Backend (port 3000) và Frontend (port 5173):
 ```bash
-cd client
-npm install
-npm run dev       # Start client (port 5173)
+npm run dev
 ```
-
-### 4. Open Browser
-Navigate to http://localhost:5173
+Trình duyệt sẽ tự động mở trang web tại http://localhost:5173.
 
 ## 🧪 Testing
 
